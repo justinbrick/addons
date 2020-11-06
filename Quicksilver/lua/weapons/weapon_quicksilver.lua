@@ -29,6 +29,7 @@ SWEP.WorldModel = ""
 
 --The attack hooks are fired on server realm, as it's predicted.
 --Function firing upon left click.
+
 function SWEP:PrimaryAttack()
     self:SetNextPrimaryFire(CurTime() + 1) --We want a 1 second delay between firing.
     self:SlowTime() -- Run the slowtime function.
@@ -44,6 +45,7 @@ end
     NOTE:
     Due to the fact that you can't necessarily "slow" time down for everything except players, what you can do instead is slow down the animations and walkspeed of
     all the entities on the map, and along with that you can slow down the physics time.
+    CORRECTION: You can't slow down the speed of NPC's themselves. I have no way of making the NPC's go into slow mode.
     For the physics timescale, there's no built in functions in the API for this, but there is a console command called "phys_timescale", which is what I'll use as a
     replacement instead to slow down the physics of objects.
 ]]
@@ -51,13 +53,18 @@ end
 --The main function we'll use to "slow" time.
 function SWEP:SlowTime()
     
-    RunConsoleCommand("phys_timescale", 0.1) -- Slow down to 0.1, default is 1.
+    if SERVER then
+        RunConsoleCommand("phys_timescale", 0.025)
+    end
 
 end
 
 --This'll be the function we use to resume time back to what it normally is.
 function SWEP:ResumeTime()
 
-    RunConsoleCommand("phys_timescale", 1) -- Setting the timescale back to normal.
+    if SERVER then
+        RunConsoleCommand("phys_timescale", 1)
+    end
+    
 
 end
