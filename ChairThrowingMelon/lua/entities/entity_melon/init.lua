@@ -2,7 +2,6 @@ AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
 include("shared.lua")
 
-
 -- Initialization Function to get physics and model drawing up and going.
 function ENT:Initialize()
     print("Initializing Melon!")
@@ -16,7 +15,9 @@ function ENT:Initialize()
     self.firstTick = false
 
     local phys = self:GetPhysicsObject()
-    if phys:IsValid() then phys:Wake() end
+    if phys:IsValid() then 
+        phys:EnableGravity(false)
+    end
 end
 
 --Simple spawn function to place the melon where we need it, or where we're looking.
@@ -29,7 +30,7 @@ end
 
 --What do we want the melon to do when we interact with it?
 function ENT:Use()
-    
+
 end
 
 --What logic do we want to add to the melon?
@@ -40,6 +41,12 @@ function ENT:Think()
         self.pointToHover = phys:GetPos() + Vector(0,0,100)
     end
     local vector = (self.pointToHover - phys:GetPos()) * 20
+    if phys:GetAngleVelocity().z < 1000 then
+        print(phys:GetAngleVelocity().z)
+        phys:AddAngleVelocity(Vector(0,0,50))
+    end
     phys:ApplyForceCenter(vector + vector - self.lastPos) --We're using a delta to smoothen out the movement, otherwise it would be wild. 
     self.lastPos = vector
+    
+
 end
