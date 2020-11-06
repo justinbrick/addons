@@ -19,6 +19,7 @@ function ENT:Initialize()
     if phys:IsValid() then phys:Wake() end
 end
 
+--Simple spawn function to place the melon where we need it, or where we're looking.
 function ENT:SpawnFunction(ply, trace)
     if !trace.HitWorld then return end
     local melon = ents.Create("entity_melon")
@@ -28,17 +29,17 @@ end
 
 --What do we want the melon to do when we interact with it?
 function ENT:Use()
-
+    
 end
 
 --What logic do we want to add to the melon?
 function ENT:Think()
-    local phys = self:GetPhysicsObject()
+    local phys = self:GetPhysicsObject() -- Get the physics object to move this around.
     if !self.firstTick then
         self.firstTick = true
         self.pointToHover = phys:GetPos() + Vector(0,0,100)
     end
     local vector = (self.pointToHover - phys:GetPos()) * 20
-    phys:ApplyForceCenter(vector + vector - self.lastPos)
+    phys:ApplyForceCenter(vector + vector - self.lastPos) --We're using a delta to smoothen out the movement, otherwise it would be wild. 
     self.lastPos = vector
 end
