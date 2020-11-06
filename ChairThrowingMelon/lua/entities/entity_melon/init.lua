@@ -11,6 +11,10 @@ function ENT:Initialize()
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
 
+    self.pointToHover = Vector(1,1,1)
+    self.lastPos = Vector(1,1,1)
+    self.firstTick = false
+
     local phys = self:GetPhysicsObject()
     if phys:IsValid() then phys:Wake() end
 end
@@ -29,5 +33,12 @@ end
 
 --What logic do we want to add to the melon?
 function ENT:Think()
-
+    local phys = self:GetPhysicsObject()
+    if !self.firstTick then
+        self.firstTick = true
+        self.pointToHover = phys:GetPos() + Vector(0,0,100)
+    end
+    local vector = (self.pointToHover - phys:GetPos()) * 20
+    phys:ApplyForceCenter(vector + vector - self.lastPos)
+    self.lastPos = vector
 end
