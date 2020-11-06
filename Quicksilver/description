@@ -1,0 +1,2 @@
+Quicksilver is a SWEP that when clicked, will slow down the time of the objects in the world, but not the players.
+For example, when the player clicks, time slows down and physics goes slower, along with animation speed and sounds, but everyone else is moving at the same pace.
