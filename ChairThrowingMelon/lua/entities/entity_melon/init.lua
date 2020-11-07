@@ -62,7 +62,7 @@ function ENT:FindPlayers() --Function for finding players then adding
     local rangeSqr = self.range * self.range
     local inRange = false
 
-    for i,player in ipairs(player.GetAll()) do
+    for _,player in ipairs(player.GetAll()) do
         if self:GetPos():DistToSqr(player:GetPos()) <= rangeSqr then
             local trace = util.TraceLine({
                 start = self:WorldSpaceCenter(),
