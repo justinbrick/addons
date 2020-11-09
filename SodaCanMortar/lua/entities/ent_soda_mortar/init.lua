@@ -4,7 +4,10 @@ include("shared.lua")
 
 -----------VARIABLES------------
 ENT.range = 3000 * 3000
+ENT.velocity = 100
+ENT.projectileList = {} -- A list of current projectiles that have been shot.
 
+util.AddNetworkString("jCanShot")
 
 -----------FUNCTIONS------------
 
@@ -29,8 +32,8 @@ function ENT:Think()
     if self.timer:Elapsed() then
         self.timer:Start(5)
 
-        for k,v in pairs(player.GetAll()) do
-            if self:GetPos():DistToSqr(v:GetPos()) <= self.range then
+        for _,player in pairs(player.GetAll()) do
+            if self:GetHorizontalDistanceSqr(player) <= self.range then
                 self:ShootCan(player)
             end
         end
@@ -38,16 +41,25 @@ function ENT:Think()
 end
 
 function ENT:ShootCan(player)
-    local can = ents.Create("prop_physics")
-    can:SetModel("models/props_junk/PopCan01a.mdl")
-    can:SetMoveType(MOVETYPE_NONE)
-    can:SetSolid(SOLID_VPHYSICS)
-    can:SetPos(self:GetPos() + Vector(0,0,10))
-    can:Spawn()
-    can:Activate()
+    if !self:PlayerInRange(player) then return end
+    net.Start("jCanShot")
+    net.WriteEntity(self) --The specific mortar that's shooting.
+    net.WriteEntity(player) --The player
+    net.Broadcast()
+end
 
-    
+--Use the formula for max range based on difference in the Z axis, and then return if it's within range.
+function ENT:PlayerInRange(player)
+    local zDiff = self:GetPos().z - player:GetPos().z
+    local maxRange = ((self.velocity * math.cos(45))/9.8) * (self.velocity*math.sin(45)+math.sqrt(math.pow(self.velocity, 2) * math.pow(math.sin(45), 2) + 2 * 9.8 * zDiff))
+    return self:GetHorizontalDistanceSqr(player) < maxRange * maxRange
+end
 
+--Get the distance between this entity and a specific player on the X plane only.
+function ENT:GetHorizontalDistanceSqr(player)
+    local x1, y1 = self:GetPos().x, self:GetPos().y
+    local x2, y2 = player:GetPos().x, player:GetPos().y
+    return (math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
 end
 
 function ENT:SpawnFunction(player, trace, classname)
