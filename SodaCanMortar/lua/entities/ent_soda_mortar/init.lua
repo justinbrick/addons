@@ -3,7 +3,6 @@ AddCSLuaFile("cl_init.lua")
 include("shared.lua")
 
 -----------VARIABLES------------
-ENT.range = 3000 * 3000
 ENT.velocity = 100
 ENT.projectileList = {} -- A list of current projectiles that have been shot.
 
@@ -33,7 +32,7 @@ function ENT:Think()
         self.timer:Start(5)
 
         for _,player in pairs(player.GetAll()) do
-            if self:GetHorizontalDistanceSqr(player) <= self.range then
+            if self:PlayerInRange(player) then
                 self:ShootCan(player)
             end
         end
@@ -48,17 +47,12 @@ function ENT:ShootCan(player)
     net.Broadcast()
 end
 
---Use the formula for max range based on difference in the Z axis, and then return if it's within range.
-function ENT:PlayerInRange(player)
-    local zDiff = self:GetPos().z - player:GetPos().z
-    local maxRange = ((self.velocity * math.cos(45))/9.8) * (self.velocity*math.sin(45)+math.sqrt(math.pow(self.velocity, 2) * math.pow(math.sin(45), 2) + 2 * 9.8 * zDiff))
-    return self:GetHorizontalDistanceSqr(player) < maxRange * maxRange
-end
+
 
 --Get the distance between this entity and a specific player on the X plane only.
 function ENT:GetHorizontalDistanceSqr(player)
-    local x1, y1 = self:GetPos().x, self:GetPos().y
-    local x2, y2 = player:GetPos().x, player:GetPos().y
+    local x1, y1 = self:GetPos().x, self:GetPos().z
+    local x2, y2 = player:GetPos().x, player:GetPos().z
     return (math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
 end
 
@@ -69,9 +63,4 @@ function ENT:SpawnFunction(player, trace, classname)
     mortar:Spawn()
     
     return mortar
-end
-
---What do we want the mortar to do upon use?
-function ENT:Use()
-
 end

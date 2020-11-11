@@ -35,14 +35,24 @@ end
 function ENT:ProjectileLogic()
     for key, projectileData in pairs(self.projectileList) do
         local can = projectileData.can
-        local target = projectileData.target
+        local beginPos = projectileData.beginPos
+        local targetPos = projectileData.targetPos
         local startTime = projectileData.startTime
         local endTime = projectileData.endTime
+        local airTime = projectileData.airTime
+        local maxHeight = projectileData.maxHeight
         local elapsedTime = CurTime() - startTime
         local elapsedEndTime = endTime - CurTime()
         if CurTime() < endTime then
-            can:SetPos(LerpVector(elapsedTime/10, self:GetPos() + Vector(0,0,20), target:EyePos()))
+            can:SetPos(LerpVector(elapsedTime/airTime, beginPos, targetPos))
+            local canPos = can:GetPos()
+            can:SetPos(Vector(canPos.x, canPos.y, beginPos.z + (maxHeight * math.sin((elapsedTime/airTime) * math.pi))))
         else
+            local effectData = EffectData()
+            effectData:SetOrigin(can:GetPos())
+            effectData:SetMagnitude(10)
+            effectData:SetScale(1)
+            util.Effect("Explosion", effectData)
             can:Remove()
             table.remove(self.projectileList, key)
         end
@@ -58,39 +68,35 @@ function ENT:Think()
     end
 end
 
---Calculate the amount of time that the can will be in the air.
-function ENT:CalculateAirTime()
-
-end
-
---Calculate the max height that the can will travel, use for a sine wave.
-function ENT:CalculateMaxHeight() 
-
-end
-
---Find the angle to position the cannon towards, in order to make it look like it's shooting the can.
-function ENT:FindAngle()
-
-end
-
 --When we get a network message, create a can and make it do this stuff.
 net.Receive("jCanShot", function(len, ply)
 
     local can = ents.CreateClientProp("prop_physics")
     local mortar = net.ReadEntity()
     local target = net.ReadEntity()
+    local beginPos = mortar:GetPos() + Vector(0,0,20)
+    local targetPos = Vector(target:GetPos().x, target:GetPos().y, beginPos.z) -- We don't want their y on this.
+
     local startTime = CurTime() 
-    local endTime = CurTime() + 10
+    local angle = mortar:SolveAngle(target)
+    if !angle then print("Failed") return end -- If the angle is unsolvable, it will return false. If it catches a false, then end.
+    local airTime = mortar:CalculateAirTime(angle, beginPos:Distance(targetPos))
+    local endTime = airTime + CurTime()
+    local maxHeight = mortar:CalculateMaxHeight(angle)
     can:SetModel("models/props_junk/PopCan01a.mdl")
     can:SetPos(mortar:GetPos() + Vector(0, 0, 20))
     can:SetMoveType(MOVETYPE_NONE)
     can:Spawn()
+    SafeRemoveEntityDelayed(can, 20)
 
     table.insert(mortar.projectileList, {
         can = can,
-        target = target,
+        beginPos = beginPos,
+        targetPos = targetPos,
         startTime = startTime,
-        endTime = endTime
+        endTime = endTime,
+        maxHeight = maxHeight,
+        airTime = airTime
     })
 
 end)
